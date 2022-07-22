@@ -19,6 +19,10 @@ class DoubleLinkedList:
         def element(self):
             return self._element
 
+        @element.setter
+        def element(self, arg):
+            self._element = arg
+
         @property
         def next(self):
             return self._next
@@ -299,6 +303,24 @@ class DoubleLinkedList:
         else:
             raise ValueError('Linked list is empty')
 
+    # def swap(self, n1: _Node, n2: _Node) -> None:
+    #     """
+    #     Swaps node positions
+    #     :param n1: _Node type
+    #     :param n2: _Node type
+    #     """
+    #     # Verify node integrity
+    #     if not (isinstance(n1, self._Node) and isinstance(n2, self._Node)):
+    #         raise TypeError('Invalid node parameters to swap')
+    #     # Handle case where node 1 is tail
+    #     elif n1.next is None:
+    #         n2.next.prev = n1
+    #         n2.prev.next = n1
+    #         n1.next = n2.next
+    #
+    #         n1.prev.next = n2
+    #         self.tail = n2
+
     # Getters
     def first(self):
         if self.head:
@@ -481,9 +503,80 @@ class DoubleLinkedList:
             return self._merge_descending(lower, upper)
 
     def _insertion_sort(self, start: _Node, ascending=True) -> Union[None, _Node]:
-        pass
+        """
+        Sorts a double linked list starting from the provided node
+        :param start: linked list start
+        :param ascending: boolean, if false, list is sorted in descending order
+        :returns: provided start node with all elements sorted
+        """
+        # Handle case where list is empty
+        if len(self) == 0:
+            raise ValueError('List is empty')
+        # Handle case where head is the only node
+        elif len(self) == 1:
+            return start
+
+        head = start
+        if ascending:
+            while start:
+                cursor = start.next
+                # Handle case where next value is already sorted
+                if cursor and cursor.get() >= start.get():
+                    start = cursor
+                # Handle case where next value is not sorted
+                elif cursor and cursor.get() < start.get():
+                    # Get value and swap with sorted node
+                    unsorted = cursor.get()
+                    cursor.element = start.get()
+                    start.element = unsorted
+
+                    # Check with previous values
+                    while start.prev and start.element < start.prev.get():
+                        unsorted = start.get()
+                        start.element = start.prev.get()
+                        start.prev.element = unsorted
+
+                        # Move backwards loop cursor
+                        start = start.prev
+
+                    # Once finished, move outer forward loop cursor
+                    start = cursor
+                # Handle case where cursor is None
+                elif cursor is None:
+                    break
+        elif not ascending:
+            while start:
+                cursor = start.next
+                # Handle case where next value is already sorted
+                if cursor and cursor.get() <= start.get():
+                    start = cursor
+                # Handle case where next value is not sorted
+                elif cursor and cursor.get() > start.get():
+                    # Get value and swap with sorted node
+                    unsorted = cursor.get()
+                    cursor.element = start.get()
+                    start.element = unsorted
+
+                    # Check with previous values
+                    while start.prev and start.element > start.prev.get():
+                        unsorted = start.get()
+                        start.element = start.prev.get()
+                        start.prev.element = unsorted
+
+                        # Move backwards loop cursor
+                        start = start.prev
+
+                    # Once finished, move outer forward loop cursor
+                    start = cursor
+                # Handle case where cursor is None
+                elif cursor is None:
+                    break
+        return head
 
     def sort_values(self, method='merge', ascending=True):
         if method == 'merge':
             self.head = self._merge_sort(self.head, ascending)
+            return self
+        if method == 'insertion':
+            self._insertion_sort(self.head, ascending)
             return self
