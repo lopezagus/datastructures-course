@@ -472,7 +472,7 @@ class DoubleLinkedList:
             l2.prev = None
             return l2
 
-    def _inplace_merge(self, l1: _Node, l2: _Node) -> _Node:
+    def _inplace_merge(self, l1: _Node, l2: _Node, ascending: bool = True) -> _Node:
         """
         Merges two linked lists non recursively
         :param l1: first node of sublist 1
@@ -480,48 +480,86 @@ class DoubleLinkedList:
         :returns: first node object of the merged linked lists
         """
         minimum = l1
-        while l1 and l2:
-            # Handle case where elements are unsorted
-            if l2 < l1:
-                # Point to next l2 element before swap
-                pointer = l2.next
-                # Swap
-                l2.next = l1
-                l2.prev = l1.prev
-                if l2.prev:
-                    l2.prev.next = l2
-                else:
-                    minimum = l2
-                l1.prev = l2
-                # Move loop to pointer
-                if pointer:
-                    l2 = pointer
-                # Handle case where l2 is the last element
-                else:
-                    # Tail assignment
-                    while l1.next:
+        if ascending:
+            while l1 and l2:
+                # Handle case where elements are unsorted
+                if l2 < l1:
+                    # Point to next l2 element before swap
+                    pointer = l2.next
+                    # Swap
+                    l2.next = l1
+                    l2.prev = l1.prev
+                    if l2.prev:
+                        l2.prev.next = l2
+                    else:
+                        minimum = l2
+                    l1.prev = l2
+                    # Move loop to pointer
+                    if pointer:
+                        l2 = pointer
+                    # Handle case where l2 is the last element
+                    else:
+                        # Tail assignment
+                        while l1.next:
+                            l1 = l1.next
+                        self.tail = l1
+                        break
+                # Handle case where elements are sorted
+                elif l1 <= l2:
+                    # Move to next l1 sorted element
+                    if l1.next:
                         l1 = l1.next
-                    self.tail = l1
-                    break
-            # Handle case where elements are sorted
-            elif l1 <= l2:
-                # Move to next l1 sorted element
-                if l1.next:
-                    l1 = l1.next
-                # Handle case where l1 is the last element
-                else:
-                    l1.next = l2
-                    l2.prev = l1
-                    # Tail assignment
-                    while l2.next:
-                        l2 = l2.next
-                    self.tail = l2
-                    break
+                    # Handle case where l1 is the last element
+                    else:
+                        l1.next = l2
+                        l2.prev = l1
+                        # Tail assignment
+                        while l2.next:
+                            l2 = l2.next
+                        self.tail = l2
+                        break
+        else:
+            while l1 and l2:
+                # Handle case where elements are unsorted
+                if l2 > l1:
+                    # Point to next l2 element before swap
+                    pointer = l2.next
+                    # Swap
+                    l2.next = l1
+                    l2.prev = l1.prev
+                    if l2.prev:
+                        l2.prev.next = l2
+                    else:
+                        minimum = l2
+                    l1.prev = l2
+                    # Move loop to pointer
+                    if pointer:
+                        l2 = pointer
+                    # Handle case where l2 is the last element
+                    else:
+                        # Tail assignment
+                        while l1.next:
+                            l1 = l1.next
+                        self.tail = l1
+                        break
+                # Handle case where elements are sorted
+                elif l1 >= l2:
+                    # Move to next l1 sorted element
+                    if l1.next:
+                        l1 = l1.next
+                    # Handle case where l1 is the last element
+                    else:
+                        l1.next = l2
+                        l2.prev = l1
+                        # Tail assignment
+                        while l2.next:
+                            l2 = l2.next
+                        self.tail = l2
+                        break
         return minimum
 
     # Sorting algorithms
-    def _merge_sort(self, start: _Node, size: int, ascending=True, threshold: int = 50, rec: Bool = False) -> Union[
-        None, _Node]:
+    def _merge_sort(self, start: _Node, size: int, ascending=True, threshold: int = 50) -> Union[None, _Node]:
         """
         Returns a new double linked list sorted recursively
         :param start: linked list pointer
@@ -545,20 +583,13 @@ class DoubleLinkedList:
         # Sort new lists recursively or through insertion-sort if size <= threshold and merge
         if threshold > size:
             # Sort new sublists with insertion sort
-            if ascending:
-                lower = self._insertion_sort(start=a_head)
-                upper = self._insertion_sort(start=b_head)
-            elif not ascending:
-                lower = self._insertion_sort(start=a_head, ascending=False)
-                upper = self._insertion_sort(start=b_head, ascending=False)
+            lower = self._insertion_sort(a_head, ascending)
+            upper = self._insertion_sort(b_head, ascending)
         else:
             lower = self._merge_sort(a_head, int(size / 2), ascending)
             upper = self._merge_sort(b_head, int(size / 2), ascending)
 
-        if ascending:
-            return self._inplace_merge(lower, upper)
-        else:
-            return self._merge_descending(lower, upper)
+        return self._inplace_merge(lower, upper, ascending)
 
     def _insertion_sort(self, start: _Node, ascending=True) -> Union[None, _Node]:
         """
