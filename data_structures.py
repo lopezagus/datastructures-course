@@ -403,12 +403,12 @@ class DoubleLinkedList:
             raise Exception('Unknown error')
 
     # Sorting utilities
-    def _merge(self, l1: Union[None, _Node], l2: Union[None, _Node]):
+    def _merge(self, l1: Union[None, _Node], l2: Union[None, _Node]) -> _Node:
         """
         Merges two ascending *sorted* linked lists
         :param l1: None, _Node
         :param l2: None, _Node
-        :returns: DoubleLinkedList
+        :returns: merged _Node object
         """
         # If a node is none, list is sorted, return the other
         if l1 is None:
@@ -472,18 +472,67 @@ class DoubleLinkedList:
             l2.prev = None
             return l2
 
+    def _inplace_merge(self, l1: _Node, l2: _Node) -> _Node:
+        """
+        Merges two linked lists non recursively
+        :param l1: first node of sublist 1
+        :param l2: first node of sublist 2
+        :returns: first node object of the merged linked lists
+        """
+        minimum = l1
+        while l1 and l2:
+            # Handle case where elements are unsorted
+            if l2 < l1:
+                # Point to next l2 element before swap
+                pointer = l2.next
+                # Swap
+                l2.next = l1
+                l2.prev = l1.prev
+                if l2.prev:
+                    l2.prev.next = l2
+                else:
+                    minimum = l2
+                l1.prev = l2
+                # Move loop to pointer
+                if pointer:
+                    l2 = pointer
+                # Handle case where l2 is the last element
+                else:
+                    # Tail assignment
+                    while l1.next:
+                        l1 = l1.next
+                    self.tail = l1
+                    break
+            # Handle case where elements are sorted
+            elif l1 <= l2:
+                # Move to next l1 sorted element
+                if l1.next:
+                    l1 = l1.next
+                # Handle case where l1 is the last element
+                else:
+                    l1.next = l2
+                    l2.prev = l1
+                    # Tail assignment
+                    while l2.next:
+                        l2 = l2.next
+                    self.tail = l2
+                    break
+        return minimum
+
     # Sorting algorithms
-    def _merge_sort(self, start: _Node, ascending=True) -> Union[None, _Node]:
+    def _merge_sort(self, start: _Node, size: int, ascending=True, threshold: int = 50, rec: Bool = False) -> Union[
+        None, _Node]:
         """
         Returns a new double linked list sorted recursively
         :param start: linked list pointer
+        :param size: int, keeps track of approximate size of list on recursive calls
+        :param threshold: int, if list size <= threshold, start using insertion sort
         :param ascending: order of values
         :returns: starting node of sorted list
         """
         # Base case condition: no elements to be sorted
         if start is None or start.next is None:
             return start
-
         # Algorithm: Cut node's links, forcing them to be new lists a, b and sorting them recursively
         # Get first split list bounds
         a_head = start
@@ -493,12 +542,21 @@ class DoubleLinkedList:
         b_head.prev = None
         upper_bound.next = None
 
-        # Sort new lists recursively and merge
-        lower = self._merge_sort(a_head, ascending)
-        upper = self._merge_sort(b_head, ascending)
+        # Sort new lists recursively or through insertion-sort if size <= threshold and merge
+        if threshold > size:
+            # Sort new sublists with insertion sort
+            if ascending:
+                lower = self._insertion_sort(start=a_head)
+                upper = self._insertion_sort(start=b_head)
+            elif not ascending:
+                lower = self._insertion_sort(start=a_head, ascending=False)
+                upper = self._insertion_sort(start=b_head, ascending=False)
+        else:
+            lower = self._merge_sort(a_head, int(size / 2), ascending)
+            upper = self._merge_sort(b_head, int(size / 2), ascending)
 
         if ascending:
-            return self._merge(lower, upper)
+            return self._inplace_merge(lower, upper)
         else:
             return self._merge_descending(lower, upper)
 
@@ -575,7 +633,7 @@ class DoubleLinkedList:
 
     def sort_values(self, method='merge', ascending=True):
         if method == 'merge':
-            self.head = self._merge_sort(self.head, ascending)
+            self.head = self._merge_sort(self.head, len(self), ascending)
             return self
         if method == 'insertion':
             self._insertion_sort(self.head, ascending)
