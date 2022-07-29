@@ -303,32 +303,72 @@ class DoubleLinkedList:
         else:
             raise ValueError('Linked list is empty')
 
-    # def swap(self, n1: _Node, n2: _Node) -> None:
-    #     """
-    #     Swaps node positions
-    #     :param n1: _Node type
-    #     :param n2: _Node type
-    #     """
-    #     # Verify node integrity
-    #     if not (isinstance(n1, self._Node) and isinstance(n2, self._Node)):
-    #         raise TypeError('Invalid node parameters to swap')
-    #     # Handle case where node 1 is tail
-    #     elif n1.next is None:
-    #         n2.next.prev = n1
-    #         n2.prev.next = n1
-    #         n1.next = n2.next
-    #
-    #         n1.prev.next = n2
-    #         self.tail = n2
+    def insert_sorted(self, e: Any, ascending: bool = True) -> None:
+        """
+        Asumming a sorted list, inserts the element
+        :param e: element added to the list
+        :type e: Any
+        :param ascending: true if list was sorted in ascending order, false if descending
+        :type ascending: boolean
+        """
+        median = self.get_median()
+        if len(self) == 0:
+            self.push(e)
+        elif ascending:
+            if self.tail and self.tail <= e:
+                self.append(e)
+            elif self.head >= e:
+                self.push(e)
+            elif median == e:
+                self.insert_after(e, median)
+            elif median > e:
+                cursor = median.prev
+                print('Starting 1')
+                while cursor:
+                    if cursor <= e:
+                        self.insert_after(e, cursor)
+                    else:
+                        cursor = cursor.prev
+            elif median < e:
+                cursor = median.next
+                print('Starting 2')
+                while cursor:
+                    if cursor >= e:
+                        self.insert_before(e, cursor)
+                    else:
+                        cursor = cursor.next
+        else:
+            if self.tail and e <= self.tail:
+                self.append(e)
+            elif e >= self.head:
+                self.push(e)
+            elif median == e:
+                self.insert_after(e, median)
+            elif e > median:
+                cursor = median.prev
+                print('Starting 3')
+                while cursor:
+                    if e <= cursor:
+                        self.insert_after(e, cursor)
+                    else:
+                        cursor = cursor.prev
+            elif e < median:
+                cursor = median.next
+                print('Starting 4')
+                while cursor:
+                    if e >= cursor:
+                        self.insert_before(e, cursor)
+                    else:
+                        cursor = cursor.next
 
     # Getters
-    def first(self):
+    def first(self) -> _Node.element:
         if self.head:
             return self.head.get()
         else:
             raise ValueError('List is empty or does not have a head')
 
-    def last(self):
+    def last(self) -> _Node.element:
         if self.tail:
             return self.tail.get()
         else:
@@ -406,8 +446,8 @@ class DoubleLinkedList:
     def _merge(self, l1: Union[None, _Node], l2: Union[None, _Node]) -> _Node:
         """
         Merges two ascending *sorted* linked lists
-        :param l1: None, _Node
-        :param l2: None, _Node
+        :param l1: None or first sublist starting _Node
+        :param l2: None or second sublist starting _Node
         :returns: merged _Node object
         """
         # If a node is none, list is sorted, return the other
@@ -438,12 +478,12 @@ class DoubleLinkedList:
             l2.prev = None
             return l2
 
-    def _merge_descending(self, l1: Union[None, _Node], l2: Union[None, _Node]):
+    def _merge_descending(self, l1: Union[None, _Node], l2: Union[None, _Node]) -> _Node:
         """
         Merges two descending *sorted* linked lists
-        :param l1: None, _Node
-        :param l2: None, _Node
-        :returns: DoubleLinkedList
+        :param l1: None or first sublist starting _Node
+        :param l2: None or second sublist starting _Node
+        :returns: Merged _Node object
         """
         # If a node is none, list is sorted, return the other
         if l1 is None:
